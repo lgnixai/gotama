@@ -60,6 +60,7 @@ const SelectEditorBase: ForwardRefRenderFunction<
               <CommandItem
                 className="justify-between"
                 key={name}
+                value={name}
                 onSelect={() => onSelect(name, id)}
               >
                 <div

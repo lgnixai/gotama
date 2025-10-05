@@ -161,35 +161,31 @@ export const EditorContainerBase: ForwardRefRenderFunction<
     () =>
       (editingEnable
         ? { pointerEvents: 'auto', minWidth: width, minHeight: height }
-        : { pointerEvents: 'none', opacity: 0, width: 0, height: 0, display: 'none' }) as React.CSSProperties,
+        : { pointerEvents: 'none', opacity: 0, width: 0, height: 0 }) as React.CSSProperties,
     [editingEnable, height, width]
   );
 
-  // 移除未使用的rect memo
-  // const rect = useMemo(() => { ... });
+  const rect = useMemo(() => {
+    const { rowInitSize, columnInitSize, containerWidth, containerHeight } = coordInstance;
+    const x = clamp(
+      coordInstance.getColumnRelativeOffset(columnIndex, scrollLeft),
+      columnInitSize,
+      containerWidth - width
+    );
+    const y = clamp(
+      coordInstance.getRowOffset(rowIndex) - scrollTop,
+      rowInitSize,
+      containerHeight - height
+    );
 
-  // 直接计算位置，避免memo缓存问题
-  const editorTop = clamp(
-    coordInstance.getRowOffset(rowIndex) - scrollTop,
-    coordInstance.rowInitSize,
-    coordInstance.containerHeight - height
-  );
-  const editorLeft = clamp(
-    coordInstance.getColumnRelativeOffset(columnIndex, scrollLeft),
-    coordInstance.columnInitSize,
-    coordInstance.containerWidth - width
-  );
-
-  // 创建当前的rect对象
-  const currentRect = {
-    x: editorLeft,
-    y: editorTop,
-    width,
-    height,
-    editorId,
-  };
-
-  console.log('🎯 最终应用的位置:', { top: editorTop, left: editorLeft, rowIndex, columnIndex });
+    return {
+      x,
+      y,
+      width,
+      height,
+      editorId,
+    };
+  }, [coordInstance, rowIndex, columnIndex, width, height, scrollLeft, scrollTop, editorId]);
 
   const EditorRenderer = useMemo(() => {
     if (readonly) return null;
@@ -206,7 +202,7 @@ export const EditorContainerBase: ForwardRefRenderFunction<
     if (customEditor) {
       return customEditor(
         {
-          rect: currentRect,
+          rect,
           theme,
           style: editorStyle,
           cell: cellContent as IInnerCell,
@@ -225,7 +221,7 @@ export const EditorContainerBase: ForwardRefRenderFunction<
         return (
           <TextEditor
             ref={editorRef}
-            rect={currentRect}
+            rect={rect}
             theme={theme}
             style={editorStyle}
             cell={cellContent}
@@ -238,7 +234,7 @@ export const EditorContainerBase: ForwardRefRenderFunction<
         return (
           <BooleanEditor
             ref={editorRef}
-            rect={currentRect}
+            rect={rect}
             theme={theme}
             cell={cellContent}
             onChange={onChangeInner}
@@ -248,7 +244,7 @@ export const EditorContainerBase: ForwardRefRenderFunction<
         return (
           <RatingEditor
             ref={editorRef}
-            rect={currentRect}
+            rect={rect}
             theme={theme}
             cell={cellContent}
             onChange={onChangeInner}
@@ -258,7 +254,7 @@ export const EditorContainerBase: ForwardRefRenderFunction<
         return (
           <SelectEditor
             ref={editorRef}
-            rect={currentRect}
+            rect={rect}
             theme={theme}
             cell={cellContent}
             style={editorStyle}
@@ -271,7 +267,7 @@ export const EditorContainerBase: ForwardRefRenderFunction<
         return (
           <ImageEditor
             ref={editorRef}
-            rect={currentRect}
+            rect={rect}
             theme={theme}
             cell={cellContent}
             style={editorStyle}
@@ -284,7 +280,7 @@ export const EditorContainerBase: ForwardRefRenderFunction<
           return (
             <DateEditor
               ref={editorRef}
-              rect={currentRect}
+              rect={rect}
               theme={theme}
               cell={cellContent as any}
               style={editorStyle}
@@ -297,7 +293,7 @@ export const EditorContainerBase: ForwardRefRenderFunction<
         return (
           <UserEditor
             ref={editorRef}
-            rect={currentRect}
+            rect={rect}
             theme={theme}
             cell={cellContent as any}
             style={editorStyle}
@@ -309,7 +305,7 @@ export const EditorContainerBase: ForwardRefRenderFunction<
         return null;
     }
   }, [
-    currentRect,
+    rect,
     theme,
     readonly,
     cellType,
@@ -326,7 +322,7 @@ export const EditorContainerBase: ForwardRefRenderFunction<
     if (!activeCell || isEditing) return;
     if (!isPrintableKey(event.nativeEvent)) return;
     if (NO_EDITING_CELL_TYPES.has(cellType)) return;
-    requestAnimationFrame(() => setEditing(true));
+    setEditing(true);
     editorRef.current?.setValue?.(null);
   };
 
@@ -340,50 +336,16 @@ export const EditorContainerBase: ForwardRefRenderFunction<
     onCopy?.(selection, e);
   };
 
-  // 最终位置 - 直接内联计算，确保使用最新值
-  const finalTop = clamp(
-    coordInstance.getRowOffset(rowIndex) - scrollTop,
-    coordInstance.rowInitSize,
-    coordInstance.containerHeight - height
-  );
-  const finalLeft = clamp(
-    coordInstance.getColumnRelativeOffset(columnIndex, scrollLeft),
-    coordInstance.columnInitSize,
-    coordInstance.containerWidth - width
-  );
-
-  console.log('📍 FINAL位置 (render时):', { 
-    finalTop, 
-    finalLeft, 
-    rowIndex, 
-    columnIndex,
-    activeCell,
-    isEditing,
-    editingEnable
-  });
-
-  const canRenderPositionedEditor = Boolean(
-    isEditing && activeCell && rowIndex >= 0 && columnIndex >= 0
-  );
-
   return (
     <div
       id={editorId}
-      className="click-outside-ignore pointer-events-none w-full"
-      style={{
-        position: 'absolute',
-        left: 0,
-        top: 0,
-      }}
-      key={`editor-${columnIndex}-${realRowIndex}-${isEditing}`}
+      className="click-outside-ignore pointer-events-none absolute left-0 top-0 w-full"
     >
-      {canRenderPositionedEditor && (
       <div
+        className="absolute z-10"
         style={{
-          position: 'absolute',
-          zIndex: 10,
-          top: finalTop,
-          left: finalLeft,
+          top: rect.y,
+          left: rect.x,
           minWidth: width,
           minHeight: height,
         }}
@@ -392,22 +354,8 @@ export const EditorContainerBase: ForwardRefRenderFunction<
         onCopy={onCopyInner}
       >
         {EditorRenderer}
-        <input 
-          className="opacity-0" 
-          ref={defaultFocusRef} 
-          style={{ 
-            position: 'absolute',
-            pointerEvents: 'none',
-            width: 0,
-            height: 0,
-            border: 'none',
-            padding: 0,
-            margin: 0,
-            overflow: 'hidden'
-          }} 
-        />
+        <input className="opacity-0" ref={defaultFocusRef} />
       </div>
-      )}
     </div>
   );
 };
