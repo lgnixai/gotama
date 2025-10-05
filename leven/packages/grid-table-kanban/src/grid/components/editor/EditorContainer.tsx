@@ -21,9 +21,12 @@ import { BooleanEditor } from './BooleanEditor';
 import { RatingEditor } from './RatingEditor';
 import { SelectEditor } from './SelectEditor';
 import { TextEditor } from './TextEditor';
+import { LinkEditor } from './LinkEditor';
 import { UserEditor } from './UserEditor';
 import { ImageEditor } from './ImageEditor';
 import { DateEditor } from './DateEditor';
+import { AttachmentEditor } from './AttachmentEditor';
+import { ChartEditor } from './ChartEditor';
 
 export interface IEditorContainerProps
   extends Pick<
@@ -216,10 +219,22 @@ export const EditorContainerBase: ForwardRefRenderFunction<
 
     switch (cellType) {
       case CellType.Text:
-      case CellType.Link:
       case CellType.Number: {
         return (
           <TextEditor
+            ref={editorRef}
+            rect={rect}
+            theme={theme}
+            style={editorStyle}
+            cell={cellContent}
+            isEditing={isEditing}
+            onChange={onChangeInner}
+          />
+        );
+      }
+      case CellType.Link: {
+        return (
+          <LinkEditor
             ref={editorRef}
             rect={rect}
             theme={theme}
@@ -301,7 +316,19 @@ export const EditorContainerBase: ForwardRefRenderFunction<
         );
       case CellType.Attachment:
         return (
-          <ImageEditor
+          <AttachmentEditor
+            ref={editorRef}
+            rect={rect}
+            theme={theme}
+            cell={cellContent as any}
+            style={editorStyle}
+            isEditing={isEditing}
+            onChange={onChangeInner}
+          />
+        );
+      case CellType.Chart:
+        return (
+          <ChartEditor
             ref={editorRef}
             rect={rect}
             theme={theme}

@@ -18,9 +18,13 @@ export default function SimpleDemo() {
   const [columns, setColumns] = useState<IGridColumn[]>([
     { id: 'name', name: 'Name', width: 180, isPrimary: true },
     { id: 'email', name: 'Email', width: 240 },
+    { id: 'website', name: 'Website', width: 200 },
     { id: 'status', name: 'Status', width: 140 },
     { id: 'rating', name: 'Rating', width: 160 },
     { id: 'assignees', name: 'Assignees', width: 200 },
+    { id: 'birthdate', name: 'Birth Date', width: 150 },
+    { id: 'attachments', name: 'Attachments', width: 180 },
+    { id: 'chartData', name: 'Chart Data', width: 200 },
     { id: 'done', name: 'Done', width: 120 },
   ])
 
@@ -64,8 +68,17 @@ export default function SimpleDemo() {
           displayData: email,
         }
       }
+      case 'website': {
+        const websites = ['github.com', 'google.com', 'stackoverflow.com', 'example.com']
+        const website = editedData ?? websites[row % websites.length]
+        return {
+          type: CellType.Link,
+          data: [`https://${website}`],
+          displayData: website,
+        }
+      }
       case 'status': {
-        const choices = ['Todo', 'Doing', 'Done']
+        const choices = ['Todo', 'Doing', 'Done', 'Review', 'Blocked']
         const value = editedData ?? choices[row % choices.length]
         return {
           type: CellType.Select,
@@ -92,6 +105,33 @@ export default function SimpleDemo() {
             { id: `u-${row}-2`, name: `Bob ${row}` },
           ],
         }
+      case 'birthdate': {
+        const dates = ['1990-01-15', '1985-06-20', '1992-12-10', '1988-03-25', '1995-09-05']
+        const date = editedData ?? dates[row % dates.length]
+        return {
+          type: CellType.Date,
+          data: date,
+          displayData: date,
+        }
+      }
+      case 'attachments': {
+        const files = ['document.pdf', 'image.jpg', 'spreadsheet.xlsx', 'presentation.pptx']
+        const file = editedData ?? files[row % files.length]
+        return {
+          type: CellType.Attachment,
+          data: file,
+          displayData: file,
+        }
+      }
+      case 'chartData': {
+        const chartData = editedData ?? [10 + row * 2, 20 + row * 3, 15 + row, 25 + row * 2, 30 + row]
+        return {
+          type: CellType.Chart,
+          data: chartData,
+          displayData: chartData.map(d => d.toString()),
+          chartType: 'bar',
+        }
+      }
       case 'done': {
         const value = editedData ?? (row % 3 === 0)
         return { type: CellType.Boolean, data: value }
@@ -396,6 +436,42 @@ Canvas: ${document.querySelector('canvas') ? '✅ 存在' : '❌ 不存在'}`
         测试编辑器位置
       </button>
       <button 
+        className="px-3 py-1 text-sm bg-green-500 text-white rounded hover:bg-green-600 transition-colors"
+        onClick={() => {
+          const editorTypes = [
+            { name: '文本编辑器', col: 0, row: 0, description: 'Name 列 - 支持文本输入' },
+            { name: '链接编辑器', col: 1, row: 0, description: 'Email 列 - 支持邮件链接' },
+            { name: '网站链接编辑器', col: 2, row: 0, description: 'Website 列 - 支持网站链接' },
+            { name: '选择编辑器', col: 3, row: 0, description: 'Status 列 - 支持下拉选择' },
+            { name: '评分编辑器', col: 4, row: 0, description: 'Rating 列 - 支持星级评分' },
+            { name: '用户编辑器', col: 5, row: 0, description: 'Assignees 列 - 支持用户选择' },
+            { name: '日期编辑器', col: 6, row: 0, description: 'Birth Date 列 - 支持日期选择' },
+            { name: '附件编辑器', col: 7, row: 0, description: 'Attachments 列 - 支持文件上传' },
+            { name: '图表编辑器', col: 8, row: 0, description: 'Chart Data 列 - 支持数字数据' },
+            { name: '布尔编辑器', col: 9, row: 0, description: 'Done 列 - 支持复选框' },
+          ]
+          
+          let info = '=== 所有编辑器类型测试指南 ===\n\n'
+          editorTypes.forEach((editor, index) => {
+            info += `${index + 1}. ${editor.name}\n`
+            info += `   位置: 第${editor.col + 1}列，第${editor.row + 1}行\n`
+            info += `   描述: ${editor.description}\n`
+            info += `   测试方法: 双击该单元格进入编辑模式\n\n`
+          })
+          
+          info += '=== 测试步骤 ===\n'
+          info += '1. 双击任意单元格进入编辑模式\n'
+          info += '2. 观察编辑器是否正确显示在单元格内\n'
+          info += '3. 尝试编辑内容并保存\n'
+          info += '4. 检查编辑器背景是否正确覆盖原始内容\n\n'
+          info += '提示：所有编辑器都应该有白色背景，无重叠显示问题！'
+          
+          setDebugInfo(info)
+        }}
+      >
+        编辑器类型说明
+      </button>
+      <button 
         className="px-3 py-1 text-sm bg-emerald-600 text-white rounded hover:bg-emerald-700 transition-colors"
         onClick={async () => {
           try {
@@ -505,7 +581,8 @@ Canvas: ${document.querySelector('canvas') ? '✅ 存在' : '❌ 不存在'}`
 
   return (
     <div className="h-full w-full flex flex-col bg-white">
-      
+      {/* 工具栏 */}
+      {toolbar}
       
       {/* 调试信息显示 */}
       {debugInfo && (
