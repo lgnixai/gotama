@@ -149,7 +149,7 @@ export const InteractionLayerBase: ForwardRefRenderFunction<
     onItemHovered,
     onItemClick,
     onColumnHeaderClick,
-    // onColumnHeaderDblClick, // 移除未使用以消除编译警告
+    onColumnHeaderDblClick,
     onColumnHeaderMenuClick,
     onColumnStatisticClick,
     onCollapsedGroupChanged,
@@ -477,7 +477,7 @@ export const InteractionLayerBase: ForwardRefRenderFunction<
               }
 
               if (type === CellRegionType.ToggleEditing) {
-                return requestAnimationFrame(() => setEditing(true));
+                return setEditing(true);
               }
             }
           );
@@ -508,34 +508,29 @@ export const InteractionLayerBase: ForwardRefRenderFunction<
   };
 
   const onDblClick = () => {
-    // 完全以当前 selection/activeCell 为准，避免鼠标态抖动
-    const { isColumnSelection, ranges: selectionRanges } = selection;
-    let target: IRange | null = null;
-
-    if (activeCell) {
-      target = activeCell as IRange;
-    } else if (selectionRanges?.length) {
-      let range = selectionRanges[0];
-      if (isColumnSelection) {
-        // 列选择时，将 rowIndex 固定为当前可见首行
-        range = [range[0], getLinearRow(0).realIndex] as IRange;
-      }
-      target = range as IRange;
+    const mouseState = getMouseState();
+    const { type, rowIndex, columnIndex } = mouseState;
+    const { realIndex } = getLinearRow(rowIndex);
+    if (
+      [RegionType.Cell, RegionType.ActiveCell].includes(type) &&
+      isEqual(selectionRanges[0], [columnIndex, realIndex])
+    ) {
+      const cell = getCellContent([columnIndex, realIndex]) as IInnerCell;
+      if (cell.readonly) return onCellDblClick?.([columnIndex, realIndex]);
+      editorContainerRef.current?.focus?.();
+      return setEditing(true);
     }
-
-    if (!target) return;
-
-    const [columnIndex, realRowIndex] = target as [number, number];
-    const cell = getCellContent([columnIndex, realRowIndex]) as IInnerCell;
-    if (cell.readonly) return onCellDblClick?.([columnIndex, realRowIndex]);
-
-    // 统一更新 selection/activeCell
-    setSelection(selection.set(SelectionRegionType.Cells, [target, target]));
-    setActiveCell(target);
-
-    // 下一帧进入编辑，确保状态已收敛
-    editorContainerRef.current?.focus?.();
-    requestAnimationFrame(() => setEditing(true));
+    if (
+      type === RegionType.ColumnHeader &&
+      isEqual(selectionRanges[0], [columnIndex, columnIndex])
+    ) {
+      return onColumnHeaderDblClick?.(columnIndex, {
+        x: coordInstance.getColumnRelativeOffset(columnIndex, scrollLeft),
+        y: 0,
+        width: coordInstance.getColumnWidth(columnIndex),
+        height: columnHeadHeight,
+      });
+    }
   };
 
   const onSmartClick = (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {

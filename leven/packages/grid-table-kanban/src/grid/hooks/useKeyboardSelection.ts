@@ -174,7 +174,7 @@ export const useKeyboardSelection = (props: ISelectionKeyboardProps) => {
     ['delete', 'backspace', 'f2'],
     () => {
       if (isHotkeyPressed('f2')) {
-        return requestAnimationFrame(() => setEditing(true));
+        return setEditing(true);
       }
       if (isHotkeyPressed('backspace') || isHotkeyPressed('delete')) {
         return onDelete?.(selection);
@@ -207,9 +207,9 @@ export const useKeyboardSelection = (props: ISelectionKeyboardProps) => {
           setEditing(false);
           scrollToItem(newRange as IRange);
         });
-    } else {
-      requestAnimationFrame(() => setEditing(true));
-    }
+      } else {
+        setEditing(true);
+      }
     },
     {
       enabled: Boolean(activeCell),
