@@ -534,7 +534,7 @@ Canvas: ${document.querySelector('canvas') ? '✅ 存在' : '❌ 不存在'}`
         </div>
       )}
       
-      <div className="relative" style={{ height: '600px', margin: '16px' }}>
+      <div className="relative" style={{ height: '600px' }}>
         {/* 添加自定义滚动条样式 */}
         <style>{`
           .scrollbar-h-\\[10px\\]::-webkit-scrollbar {

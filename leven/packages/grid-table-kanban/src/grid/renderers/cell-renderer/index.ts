@@ -1,6 +1,8 @@
+import { attachmentCellRenderer } from './attachmentCellRenderer';
 import { booleanCellRenderer } from './booleanCellRenderer';
 import { buttonCellRenderer } from './buttonCellRenderer';
 import { chartCellRenderer } from './chartCellRenderer';
+import { dateCellRenderer } from './dateCellRenderer';
 import { imageCellRenderer } from './imageCellRenderer';
 import { CellType } from './interface';
 import { linkCellRenderer } from './linkCellRenderer';
@@ -36,6 +38,10 @@ export const getCellRenderer = (cellType: CellType) => {
       return userCellRenderer;
     case CellType.Button:
       return buttonCellRenderer;
+    case CellType.Date:
+      return dateCellRenderer;
+    case CellType.Attachment:
+      return attachmentCellRenderer;
     case CellType.Loading:
     default:
       return loadingCellRenderer;

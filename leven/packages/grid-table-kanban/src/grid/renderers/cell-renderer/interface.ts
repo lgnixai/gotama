@@ -18,6 +18,8 @@ export enum CellType {
   Boolean = 'Boolean',
   Loading = 'Loading',
   Button = 'Button',
+  Date = 'Date',
+  Attachment = 'Attachment',
 }
 
 export enum EditorType {
@@ -167,6 +169,19 @@ export interface IButtonCell extends IEditableCell {
   };
 }
 
+export interface IDateCell extends IEditableCell {
+  type: CellType.Date;
+  data: string;
+  displayData: string;
+  isDateLike?: boolean;
+}
+
+export interface IAttachmentCell extends IEditableCell {
+  type: CellType.Attachment;
+  data: string[];
+  displayData: string[];
+}
+
 export type IInnerCell =
   | ITextCell
   | ILinkCell
@@ -177,7 +192,9 @@ export type IInnerCell =
   | IBooleanCell
   | IChartCell
   | IUserCell
-  | IButtonCell;
+  | IButtonCell
+  | IDateCell
+  | IAttachmentCell;
 
 export type ICell = IInnerCell | ILoadingCell;
 

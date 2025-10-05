@@ -6,6 +6,9 @@
 // Core Grid System
 export * from './grid';
 
+// Grid Enhancements
+export * from './grid-enhancements';
+
 // Kanban System
 //export * from './kanban';
 

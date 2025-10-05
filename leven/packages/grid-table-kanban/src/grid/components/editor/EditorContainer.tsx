@@ -74,7 +74,7 @@ export interface IEditorContainerRef {
   saveValue?: () => void;
 }
 
-const NO_EDITING_CELL_TYPES = new Set([CellType.Boolean, CellType.Rating]);
+const NO_EDITING_CELL_TYPES = new Set([CellType.Boolean, CellType.Rating, CellType.Button]);
 
 export const EditorContainerBase: ForwardRefRenderFunction<
   IEditorContainerRef,
@@ -275,23 +275,33 @@ export const EditorContainerBase: ForwardRefRenderFunction<
             onChange={onChangeInner}
           />
         );
-      case CellType.Text: // 复用 Text 的壳，但外层映射为日期字段
-        if ((cellContent as any).isDateLike) {
-          return (
-            <DateEditor
-              ref={editorRef}
-              rect={rect}
-              theme={theme}
-              cell={cellContent as any}
-              style={editorStyle}
-              isEditing={isEditing}
-              onChange={onChangeInner}
-            />
-          );
-        }
+      case CellType.Date:
+        return (
+          <DateEditor
+            ref={editorRef}
+            rect={rect}
+            theme={theme}
+            cell={cellContent as any}
+            style={editorStyle}
+            isEditing={isEditing}
+            onChange={onChangeInner}
+          />
+        );
       case CellType.User:
         return (
           <UserEditor
+            ref={editorRef}
+            rect={rect}
+            theme={theme}
+            cell={cellContent as any}
+            style={editorStyle}
+            isEditing={isEditing}
+            onChange={onChangeInner}
+          />
+        );
+      case CellType.Attachment:
+        return (
+          <ImageEditor
             ref={editorRef}
             rect={rect}
             theme={theme}
